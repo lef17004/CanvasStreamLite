@@ -1,10 +1,22 @@
 import random
 from application.canvas import Canvas
 from application.event import ServerToClient, Instruction, ClientToServer
+from application.consolestreamcanvas import ConsoleStreamCanvas
+from application.eventtoinput import event_to_input
+from consoleui import UiButton, UiChar, UiViewManager, UiView, UiAction
 
-class Main:
+class ButtonAction(UiAction):
+    def __init__(self, canvas: Canvas) -> None:
+        super().__init__()
+        self.canvas = canvas
+
+    def execute(self):
+        print('executed')
+        self.canvas.fill_style = 'red'
+        
+class Application:
     """
-    Main
+    Application
 
     The starting point of the application
 
@@ -12,23 +24,26 @@ class Main:
         session_key: str
             The identifier used to match the client to the application
     """
-    def __init__(self):
+    def __init__(self, session_key):
         """
         Init
 
         Creates a new Main object
         """
-        self.session_key = str(random.randint(1, 100))
+        self.session_key = session_key
         self._width = 9.6015625 * 80 # Controls width of canvas on client side
         self._height = 16 * 24 # Controls height of canvas on client side
         self._canvas = Canvas()
+        self._console_canvas = ConsoleStreamCanvas(self._canvas, 50, 50)
+        self._root_view = UiView()
+        self._manager = UiViewManager(self._root_view, self._console_canvas)
         self._listeners = [ 
             "click",
-            "keydown",
-            "keyup",
-            "dblclick",
-            "mousedown",
-            "mouseup",
+            # "keydown",
+            # "keyup",
+            # "dblclick",
+            # "mousedown",
+            # "mouseup",
             # "mousemove",
             # "touchstart",
             # "touchmove",
@@ -70,6 +85,15 @@ class Main:
             Instruction("command", "setListeners", [self._listeners])
         ])
 
+        button = UiButton()
+        button.action = ButtonAction(self._canvas)
+        self._root_view.add_gizmo(button)
+
+        self._canvas.fill_style = "blue"
+        self._canvas.font = "16px Monaco"
+
+        response.add_instructions(self._canvas.get_draw_instructions())
+
         return response
     
     def loop(self, message: ClientToServer) -> ServerToClient:
@@ -84,22 +108,17 @@ class Main:
         Returns:
             ServerToClient: The response to send to the client
         """
-        time = message.time
         events = message.events
         response = ServerToClient()
         
         self._canvas.clear_instructions()
-        WIDTH = 9.6015625
+        
         for e in events:
-            print(e.type)
             if e.type == 'click':
-                self._canvas.draw_image('/static/images/invader.png', e.x, e.y, 100, 100)
-                self._canvas.fill_style = "blue"
-                self._canvas.fill_rect(e.x, e.y, 16, 16)
-                # self._canvas.font = "16px Monaco"
-                # self._canvas.fill_text("Test Text", e.x, e.y)
-                # self._canvas.fill_text("Taco Time", e.x, e.y + 16)
-                # self._canvas.fill_text("---------", e.x, e.y + 32)
+                input = event_to_input(e)
+                print(input.type)
+                self._manager.advance(input)
+                
                 response.add_instructions(self._canvas.get_draw_instructions())
 
         return response

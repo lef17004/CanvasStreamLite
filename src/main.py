@@ -1,8 +1,9 @@
 from bottle import route, run, static_file, request, post
-from application.main import Main
+from application.application import Application
+from application.server import Server
 from application.event import ClientToServer
 
-applications = {}
+server = Server()
 
 @route('/hello')
 def hello():
@@ -19,24 +20,24 @@ def server_static(filepath):
 @post('/setup/')
 def setup():
     setup_info = request.json
-    main = Main()
-    response = main.setup(setup_info)
-    session_key = main.session_key
-    applications[session_key] = main
+    app = server.start_application()
+    
+    response = app.setup(setup_info)
 
     return {'instructions' :response.instructions}
 
 @post("/event/<session_key>")
 def event(session_key):
     message = ClientToServer(request.json)
-    response = applications[str(session_key)].loop(message)
+    app = server.get_session(session_key)
+    response = app.loop(message)
     return {'instructions': response.instructions}
 
 @route("/disconnect/<session_key>")
 def disconnect(session_key):
     return {}
 
-run(host='localhost', port=8080, debug=True)
+run(host='localhost', port=8081, debug=True)
 
 
 

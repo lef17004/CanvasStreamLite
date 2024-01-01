@@ -1,10 +1,3 @@
-class ModifiedContexts extends CanvasRenderingContext2D {
-    drawImage() {
-        alert();
-        super.drawImage();
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Main
 /// Mostly exists to avoid having global variables

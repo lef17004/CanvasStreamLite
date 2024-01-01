@@ -36,6 +36,18 @@ class Canvas:
     def set_font(self, font: str):
         self._add_var_set("font", font)
 
+    def set_text_align(self, value: str):
+        """
+        https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/textAlign
+        """
+        self._add_var_set('textAlign', value)
+
+    def set_text_baseline(self, baseline: str):
+        """
+        https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/textBaseline
+        """
+        self._add_var_set('textBaseline', baseline)
+
 
     # Makes it so setters can be accessed as properties
     fill_style = property(fset=set_fill_style)
